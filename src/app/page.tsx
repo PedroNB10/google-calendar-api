@@ -12,6 +12,7 @@ import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
 import { type AppProps } from "next/app";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 import { use, useEffect, useState } from "react";
+import { title } from "process";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -20,11 +21,15 @@ const supabase = createClient(
 
 export default function Home() {
   const [session, setSession] = useState<Session>();
+  const [isLoading, setIsLoading] = useState(true);
+  console.log(new Date().toISOString());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session || undefined);
       console.log(session?.user.email);
+      console.log(session?.refresh_token);
+      setIsLoading(false);
     });
 
     const {
@@ -67,11 +72,50 @@ export default function Home() {
     googleSignIn();
   };
 
+  async function createCalendarEvent() {
+    const event = {
+      summary: "evento teste",
+      description: "teste de evento",
+      start: {
+        dateTime: "2024-02-28T10:00:00-03:00",
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+      end: {
+        dateTime: "2024-02-28T11:00:00-03:00",
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+    };
+    console.log("createCalendarEvent");
+    console.log(session?.provider_token);
+
+    await fetch(
+      "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session?.provider_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(event),
+      }
+    )
+      .then((data) => {
+        return data;
+      })
+      .then((data) => {
+        console.log(data);
+        console.log(data.status);
+        alert("Evento criado com sucesso");
+      });
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <h1>teste</h1>
       <SessionContextProvider supabaseClient={supabase}>
         <div className="w-[400px] mx-auto my-30 bg-white text-black">
+          {isLoading ? <div>Carregando...</div> : <div>PRONTO</div>}
+
           {session?.user.email ? (
             <div>
               <h1>Olá, {session.user.email}</h1>
@@ -83,6 +127,8 @@ export default function Home() {
         </div>
       </SessionContextProvider>
       <button onClick={handleSignInClick}>botaozin login</button>
+
+      <button onClick={createCalendarEvent}>Criar evento no calendar</button>
     </main>
   );
 }
