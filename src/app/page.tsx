@@ -12,7 +12,7 @@ import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
 import { type AppProps } from "next/app";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 import { use, useEffect, useState } from "react";
-import { title } from "process";
+import { send, title } from "process";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -74,19 +74,26 @@ export default function Home() {
 
   async function createCalendarEvent() {
     const event = {
-      summary: "evento teste",
+      summary: "Corte de cabelo",
       description: "teste de evento",
+
       start: {
-        dateTime: "2024-02-28T10:00:00-03:00",
+        dateTime: "2024-02-28T18:00:00-03:00",
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       end: {
-        dateTime: "2024-02-28T11:00:00-03:00",
+        dateTime: "2024-02-28T18:45:00-03:00",
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
+      attendees: [
+        { email: "barbarolling@gmail.com", responseStatus: "needsAction" },
+      ],
+
+      sendUpdates: "all",
     };
     console.log("createCalendarEvent");
     console.log(session?.provider_token);
+    console.log(session?.expires_at);
 
     await fetch(
       "https://www.googleapis.com/calendar/v3/calendars/primary/events",
@@ -94,6 +101,7 @@ export default function Home() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session?.provider_token}`,
+
           "Content-Type": "application/json",
         },
         body: JSON.stringify(event),
