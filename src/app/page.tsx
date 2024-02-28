@@ -27,7 +27,7 @@ export default function Home() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session || undefined);
-      console.log(session?.user.email);
+      console.log(session?.user.user_metadata.full_name);
       console.log(session?.refresh_token);
       setIsLoading(false);
     });
@@ -126,7 +126,7 @@ export default function Home() {
 
           {session?.user.email ? (
             <div>
-              <h1>Olá, {session.user.email}</h1>
+              <h1>Olá, {session.user.user_metadata.full_name}</h1>
               <button onClick={signOut}>Sair</button>
             </div>
           ) : (
